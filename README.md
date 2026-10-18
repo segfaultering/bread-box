@@ -7,7 +7,7 @@ A Manifest V3 Chromium extension with persistent account containers backed by in
 Requires Node.js 22+ and a locally installed Chrome, Chromium, Brave or Edge on Linux or macOS. Windows and sandbox-packaged browsers (Snap/Flatpak) are not supported yet.
 
 1. Open `chrome://extensions` (or your browser's extensions page), enable **Developer mode**, choose **Load unpacked**, and select this project's `extension` folder.
-2. Open Bread Box from the browser's Extensions menu. Under **One quick setup**, explicitly choose the browser where you loaded it and click **Download installer**. Run the downloaded file. Your extension ID and browser choice are included, and the installer contains all companion files; it does not need the project folder. The installer enables only the browser you selected. It never chooses a browser automatically.
+2. Open Bread Box from the browser's Extensions menu and click **Download installer**. Run the downloaded file. Bread Box identifies the browser hosting the extension and prepares its installer automatically, including the extension ID and all companion files. You do not need to select a browser or have the project folder available when running the installer.
 3. Click **Check connection** in the popup (reopen it if it closed). Once connected, create a container and click its name to open it. Log in normally; subsequent opens retain that account. Check **Open the current page** to send a page to a container, or right-click a link and select **Open link in container**.
 
 To enable another browser, load the extension in that browser and repeat its setup. No administrator access or npm dependency installation is needed.
@@ -20,9 +20,9 @@ For advanced or scripted installation:
 node native/install.mjs --extension-id YOUR_EXTENSION_ID --browser chrome
 ```
 
-Browser choices: `chrome`, `chromium`, `brave`, `edge`. The `--browser` option is required. For a nonstandard installation add `--executable /absolute/path/to/browser`. The installer locates the executable only for the browser you explicitly selected.
+For this developer command, `--browser` is required and accepts `chrome`, `chromium`, `brave`, or `edge`. For a nonstandard installation add `--executable /absolute/path/to/browser`. Normal setup fills in the browser automatically.
 
-The installer copies the companion into `~/.bread-box/host/` and registers it with your selected browser for this extension ID. It uses the absolute path of the Node executable running the installer; rerun installation if you move or remove that Node version. Reload the extension after code changes. After changing companion sources, run `npm run build` to refresh the packaged installer, reload the extension and download/run a new installer. No npm dependency installation is required.
+The installer copies the companion into `~/.bread-box/host/` and registers it with the browser hosting the extension for this extension ID. It uses the absolute path of the Node executable running the installer; rerun installation if you move or remove that Node version. Reload the extension after code changes. After changing companion sources, run `npm run build` to refresh the packaged installer, reload the extension and download/run a new installer. No npm dependency installation is required.
 
 ## Current behavior and limits
 
@@ -38,7 +38,7 @@ Data lives in `~/.bread-box/data/<browser>/`: `containers.json` stores names/col
 
 To uninstall the bridge, remove `com.breadbox.containers.json` from your browser's `NativeMessagingHosts` directory and remove `~/.bread-box/host/`. On Linux the registration is under `~/.config/<browser>/NativeMessagingHosts`; on macOS it is under `~/Library/Application Support/<browser>/NativeMessagingHosts` (vendor paths vary). Keep the data folder to retain logins. Close all container windows before intentionally deleting any profile data.
 
-If the popup says setup is needed, check the extension ID and selected browser and rerun the installer. If a killed companion leaves `catalog.lock` behind, ensure no companion is running and remove that empty directory from the data folder.
+If the popup says setup is needed, download a fresh installer from the affected browser and run it again. If a killed companion leaves `catalog.lock` behind, ensure no companion is running and remove that empty directory from the data folder.
 
 ## Validation
 

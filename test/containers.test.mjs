@@ -7,7 +7,21 @@ import { promisify } from 'node:util';
 import { execFile, spawn } from 'node:child_process';
 import { handle, validateUrl } from '../native/core.mjs';
 import { createInstaller } from '../extension/installer.js';
+import { currentBrowser } from '../extension/browser.js';
 const exec = promisify(execFile);
+test('setup targets the browser hosting the extension', async () => {
+  const hints = (...brands) => ({ userAgent: 'Chrome/140.0.0.0', userAgentData: { brands: brands.map(brand => ({ brand })) } });
+  assert.equal(await currentBrowser(hints('Chromium', 'Google Chrome')), 'chrome');
+  assert.equal(await currentBrowser(hints('Chromium', 'Microsoft Edge')), 'edge');
+  assert.equal(await currentBrowser(hints('Chromium')), 'chromium');
+  assert.equal(await currentBrowser({ ...hints('Chromium'), brave: { isBrave: async () => true } }), 'brave');
+  assert.equal(await currentBrowser(hints('Chromium', 'Brave')), 'brave');
+  assert.equal(await currentBrowser({ userAgent: 'Chrome/140.0 Edg/140.0' }), 'edge');
+  assert.equal(await currentBrowser({ userAgent: 'Chrome/140.0' }), 'chrome');
+  assert.equal(await currentBrowser({ userAgent: 'Chromium/140.0' }), 'chromium');
+  await assert.rejects(currentBrowser({ userAgent: 'Chrome/140.0 OPR/100.0' }), /supports/);
+  await assert.rejects(currentBrowser({ userAgent: 'Unknown browser' }), /Could not identify/);
+});
 test('containers persist with independent profile paths and safe launch arguments', async t => {
   const root = await mkdtemp(join(tmpdir(), 'breadbox-')); t.after(() => rm(root, { recursive: true, force: true }));
   const config = { executable: '/browser' }; const launches = [];
@@ -43,7 +57,7 @@ test('installer and native host exchange real protocol messages', async t => {
   await writeFile(fake, '#!/bin/sh\nexit 0\n', { mode: 0o700 });
   const files = JSON.parse(await readFile(new URL('../extension/installer-bundle.json', import.meta.url), 'utf8'));
   for (const [name, content] of Object.entries(files)) assert.equal(content, await readFile(new URL(`../native/${name}`, import.meta.url), 'utf8'), 'Run npm run build after changing companion sources');
-  assert.throws(() => createInstaller(files, '', id), /Choose a browser/);
+  assert.throws(() => createInstaller(files, '', id), /Could not prepare/);
   const downloaded = join(home, 'Bread-Box-chrome-Setup.sh');
   await writeFile(downloaded, createInstaller(files, 'chrome', id));
   await exec('/bin/sh', [downloaded, '--executable', fake, '--home', home]);

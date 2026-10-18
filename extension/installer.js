@@ -1,5 +1,5 @@
 export function createInstaller(files, browser, id) {
-  if (!['chrome', 'chromium', 'brave', 'edge'].includes(browser) || !/^[a-p]{32}$/.test(id)) throw new Error('Choose a browser before downloading.');
+  if (!['chrome', 'chromium', 'brave', 'edge'].includes(browser) || !/^[a-p]{32}$/.test(id)) throw new Error('Could not prepare the installer for this browser.');
   return `#!/bin/sh
 set -eu
 if ! command -v node >/dev/null 2>&1; then
