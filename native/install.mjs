@@ -12,10 +12,10 @@ for (let i = 0; i < args.length; i += 2) {
 const id = options['--extension-id'];
 if (!/^[a-p]{32}$/.test(id || '')) throw new Error('Provide the extension ID shown on your browser extensions page.');
 if (!['linux', 'darwin'].includes(process.platform)) throw new Error('The companion installer currently supports Linux and macOS.');
-const browser = options['--browser'] || 'chrome';
+const browser = options['--browser'];
 const linux = { chrome: ['google-chrome', 'google-chrome-stable'], chromium: ['chromium', 'chromium-browser'], brave: ['brave-browser', 'brave'], edge: ['microsoft-edge', 'microsoft-edge-stable'] };
 const mac = { chrome: 'Google Chrome.app/Contents/MacOS/Google Chrome', chromium: 'Chromium.app/Contents/MacOS/Chromium', brave: 'Brave Browser.app/Contents/MacOS/Brave Browser', edge: 'Microsoft Edge.app/Contents/MacOS/Microsoft Edge' };
-if (!linux[browser]) throw new Error('Unsupported browser. Choose chrome, chromium, brave, or edge.');
+if (!browser || !linux[browser]) throw new Error('Choose a browser explicitly with --browser chrome, chromium, brave, or edge. No browser was enabled.');
 let executable = options['--executable'];
 if (executable && !isAbsolute(executable)) throw new Error('--executable must be an absolute path.');
 const candidates = executable ? [executable] : process.platform === 'darwin' ? [join('/Applications', mac[browser]), join(homedir(), 'Applications', mac[browser])] : (process.env.PATH || '').split(':').flatMap(dir => linux[browser].map(name => resolve(dir, name)));

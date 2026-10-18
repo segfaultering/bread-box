@@ -36,6 +36,8 @@ test('concurrent native clients do not lose catalog updates', async t => {
 test('installer and native host exchange real protocol messages', async t => {
   const home = await mkdtemp(join(tmpdir(), 'breadbox-install-')); t.after(() => rm(home, { recursive: true, force: true }));
   const id = 'a'.repeat(32);
+  await assert.rejects(exec(process.execPath, ['native/install.mjs', '--extension-id', id, '--home', home]), /Choose a browser explicitly/);
+  await assert.rejects(readFile(join(home, '.config/google-chrome/NativeMessagingHosts/com.breadbox.containers.json')), { code: 'ENOENT' });
   const fake = join(home, 'browser');
   await writeFile(fake, '#!/bin/sh\nexit 0\n', { mode: 0o700 });
   await exec(process.execPath, ['native/install.mjs', '--extension-id', id, '--browser', 'chrome', '--executable', fake, '--home', home]);

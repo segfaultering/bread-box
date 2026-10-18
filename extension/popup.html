@@ -14,6 +14,22 @@
       <button type="submit">Create container</button>
     </form></details>
     <p id="status" role="status" aria-live="polite"></p>
-    <details id="setup" hidden><summary>Connect the local companion</summary><p>Load this extension, then run the command below from the Bread Box project folder with Node.js 22 or newer.</p><code id="command"></code><p>Supports Linux and macOS. Choose the browser you installed the extension in: chrome, chromium, brave, or edge. Reopen this popup after installation.</p></details>
+    <section id="setup" hidden aria-labelledby="setup-title">
+      <h2 id="setup-title">One quick setup</h2>
+      <p>Choose the browser where you loaded Bread Box. Only that browser will be enabled.</p>
+      <label for="setup-browser">Enable Bread Box for</label>
+      <select id="setup-browser" required>
+        <option value="">Choose your browser…</option>
+        <option value="chrome">Google Chrome</option><option value="chromium">Chromium</option><option value="brave">Brave</option><option value="edge">Microsoft Edge</option>
+      </select>
+      <div id="setup-command" hidden>
+        <p>In the Bread Box project folder, open a terminal and paste this command. Your extension ID is already included.</p>
+        <code id="command"></code>
+        <button id="copy-command" type="button">Copy setup command</button>
+        <button id="check-connection" type="button">Check connection</button>
+      </div>
+      <p class="hint">Requires Node.js 22 or newer on Linux or macOS. The companion keeps account sessions on this computer. No administrator access needed.</p>
+      <details><summary>Need help?</summary><p>Install Node.js if the terminal says “node: command not found”. If your browser is installed in a custom location, add <code>--executable /absolute/path/to/browser</code> to the command. Check that the selected browser is the one showing this extension.</p></details>
+    </section>
   </main><footer>LOCAL PROFILES · NO CLOUD ACCOUNT</footer><script type="module" src="popup.js"></script>
 </body></html>
