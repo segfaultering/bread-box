@@ -1,53 +1,75 @@
 # Bread Box
 
-A Manifest V3 Chromium extension with persistent account containers backed by independent browser user data directories. Cookies, local storage, IndexedDB, service workers and browser settings belong to each profile. No dependencies, hosted service, telemetry, cookie interception or remote debugging.
+Bread Box is a browser extension that keeps your accounts in separate, persistent browser profiles. Use it to stay signed into work, personal, or client accounts on the same website without repeatedly logging out.
 
-## Run locally
+## How it works
 
-Requires Node.js 22+ and a locally installed Chrome, Chromium, Brave or Edge on Linux or macOS. Windows and sandbox-packaged browsers (Snap/Flatpak) are not supported yet.
+Create a named container, then open it from the extension. A small local Node.js companion launches your browser with a separate profile for that container. Each profile keeps its own cookies, local storage, IndexedDB, service workers, and settings, so your sessions survive closing and reopening the browser.
 
-1. Open `chrome://extensions` (or your browser's extensions page), enable **Developer mode**, choose **Load unpacked**, and select this project's `extension` folder.
-2. Open Bread Box from the browser's Extensions menu and click **Download installer**. Run the downloaded file. Bread Box identifies the browser hosting the extension and prepares its installer automatically, including the extension ID and all companion files. You do not need to select a browser or have the project folder available when running the installer.
-3. Click **Check connection** in the popup (reopen it if it closed). Once connected, create a container and click its name to open it. Log in normally; subsequent opens retain that account. Check **Open the current page** to send a page to a container, or right-click a link and select **Open link in container**.
+Containers open in separate browser windows. All data stays on your computer; Bread Box has no hosted service, cloud account, or telemetry.
 
-To enable another browser, load the extension in that browser and repeat its setup. No administrator access or npm dependency installation is needed.
+## Features
 
-Downloaded scripts may need permission to execute. On Linux, use the file's Properties to allow running it as a program, then choose Run in Terminal where supported. On macOS, the `.command` file may also need execute permission before opening in Terminal. Some systems require running shell scripts from a terminal. This is a portable script installer, not a signed desktop installer; Node.js 22+ must already be installed.
+- Create and rename containers, with color markers in the launcher.
+- Keep independent logins for the same website.
+- Open the current page in a container while leaving the original tab open.
+- Right-click a link and choose **Open link in container**.
+- Reuse existing containers and their saved sessions.
 
-For advanced or scripted installation:
+## Technologies
+
+- **JavaScript, HTML, and CSS** for the extension interface.
+- **Chromium Manifest V3** with a background service worker and context menus.
+- **Native Messaging** to connect the extension to the local companion.
+- **Node.js 22+** for profile management, installation, and tests.
+
+No third-party dependencies or npm installation are required.
+
+## Set up locally
+
+You need **Linux or macOS**, **Node.js 22 or newer**, and a locally installed **Chrome, Chromium, Brave, or Edge**. Windows and Snap/Flatpak browser installations are not supported yet.
+
+1. Clone the project and enter its directory:
+
+   ```sh
+   git clone https://github.com/segfaultering/bread-box.git
+   cd bread-box
+   ```
+
+2. Open your browser's extensions page (for example, `chrome://extensions`), enable **Developer mode**, click **Load unpacked**, and select the project's `extension` folder.
+3. Open **Bread Box** from the Extensions menu. Click **Download installer**, then run the downloaded script. It automatically includes your browser, extension ID, and companion files. No administrator access is needed.
+4. Return to the popup and click **Check connection**. Create a container, click its name, and log into your website normally.
+
+Downloaded scripts may need execute permission. On Linux, allow execution in the file's Properties and choose **Run in Terminal** where available. On macOS, give the `.command` file execute permission and open it in Terminal. You can also run either script from a terminal with `sh /path/to/downloaded-file`.
+
+Repeat setup for each browser you want to use. If the connection fails, download and run a fresh installer from that browser. Rerun it if you move or remove the Node.js version used during installation.
+
+### Manual companion installation
+
+Instead of downloading the installer, copy the extension ID from your browser's extensions page and run:
 
 ```sh
-node native/install.mjs --extension-id YOUR_EXTENSION_ID --browser chrome
+npm run install:host -- --extension-id YOUR_EXTENSION_ID --browser chrome
 ```
 
-For this developer command, `--browser` is required and accepts `chrome`, `chromium`, `brave`, or `edge`. For a nonstandard installation add `--executable /absolute/path/to/browser`. Normal setup fills in the browser automatically.
+The browser option accepts `chrome`, `chromium`, `brave`, or `edge`. For a nonstandard browser location, add `--executable /absolute/path/to/browser`.
 
-The installer copies the companion into `~/.bread-box/host/` and registers it with the browser hosting the extension for this extension ID. It uses the absolute path of the Node executable running the installer; rerun installation if you move or remove that Node version. Reload the extension after code changes. After changing companion sources, run `npm run build` to refresh the packaged installer, reload the extension and download/run a new installer. No npm dependency installation is required.
-
-## Current behavior and limits
-
-- Each container opens in its own browser profile/window. Repeated opens use the running profile. Chromium cannot provide Firefox's native per-tab containers through its public extension APIs.
-- Names and color dots identify containers in the launcher. Native browser tab strips/window frames are not colored by this version.
-- Opening a page leaves its original tab untouched. Existing login state is never copied into a container.
-- The extension starts in your main browser profile. Fresh container profiles have their own extensions and settings; Bread Box is not automatically installed into them. Load it manually there if you want the launcher in those windows, then rerun the companion installer for the ID shown there. Native registration allows the most recently installed ID for that browser.
-- Separate profiles isolate browser storage; they are not OS sandboxes and do not hide your IP address or prevent fingerprinting. Avoid enabling browser sync across containers if you want their settings to remain independent.
-- This initial version supports creation, renaming, persistent sessions and link launching. Domain routing, deletion, import/export and Windows packaging are future work.
-- Catalogs are shared between Bread Box installations for the same browser. Different browser families have separate catalogs. Container deletion is deliberately absent to avoid accidentally deleting active login data.
-
-Data lives in `~/.bread-box/data/<browser>/`: `containers.json` stores names/colors and `profiles/<id>/` holds browser-managed account data. Back up that directory only while its browser windows are closed. The companion uses private permissions for its data directory and validates URL schemes, container identifiers and caller origins. Browser launch arguments are passed directly without a shell.
-
-To uninstall the bridge, remove `com.breadbox.containers.json` from your browser's `NativeMessagingHosts` directory and remove `~/.bread-box/host/`. On Linux the registration is under `~/.config/<browser>/NativeMessagingHosts`; on macOS it is under `~/Library/Application Support/<browser>/NativeMessagingHosts` (vendor paths vary). Keep the data folder to retain logins. Close all container windows before intentionally deleting any profile data.
-
-If the popup says setup is needed, download a fresh installer from the affected browser and run it again. If a killed companion leaves `catalog.lock` behind, ensure no companion is running and remove that empty directory from the data folder.
-
-## Validation
+## Development
 
 ```sh
-npm test
+npm test        # Run the automated tests
+npm run build   # Rebuild the bundled companion installer
 ```
 
-Tests cover persistent catalog updates, concurrent writers, isolated launch directories, argument/URL validation, companion installation, caller validation and native-message framing through a real subprocess with a fake browser executable. Actual browser logins and macOS behavior still require manual verification.
+Reload the extension after extension changes. After changing companion code in `native/`, rebuild the installer, reload the extension, and download and run the new installer.
 
-Manual acceptance: open Work and Personal on the same site, log into different accounts, refresh both, then close/reopen them and confirm each retains its own login. Check link launching and invalid URL errors. Browser testing requires a graphical browser; the development environment used for this version has none installed.
+The code is organized into `extension/` (interface and browser integration), `native/` (local companion), `scripts/` (installer bundling), and `test/` (automated tests).
 
-Architecture references: [Chromium user data directories](https://chromium.googlesource.com/chromium/src/+/HEAD/docs/user_data_dir.md), [Chrome native messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging).
+## Data and limitations
+
+Container data lives in `~/.bread-box/data/<browser>/`: `containers.json` stores the catalog, and `profiles/` holds browser profiles. Close container windows before backing up this directory. Containers are shared between Bread Box installations for the same browser; different browsers have separate catalogs.
+
+- Isolation is per window/profile, rather than per tab. Color markers appear only in the launcher.
+- Existing logins are not copied into containers. Fresh profiles have their own extensions and settings; Bread Box is not automatically installed in them.
+- Separate profiles do not hide your IP address or prevent fingerprinting. Avoid browser sync across containers if you want settings to stay independent.
+- Container deletion, automatic domain routing, and import/export are not implemented yet.
