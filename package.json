@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test --test-isolation=none", "install:host": "node native/install.mjs" },
+  "scripts": { "build": "node scripts/bundle-installer.mjs", "test": "node --test --test-isolation=none", "install:host": "node native/install.mjs" },
   "engines": { "node": ">=22" }
 }

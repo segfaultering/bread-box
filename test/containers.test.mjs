@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { execFile, spawn } from 'node:child_process';
 import { handle, validateUrl } from '../native/core.mjs';
+import { createInstaller } from '../extension/installer.js';
 const exec = promisify(execFile);
 test('containers persist with independent profile paths and safe launch arguments', async t => {
   const root = await mkdtemp(join(tmpdir(), 'breadbox-')); t.after(() => rm(root, { recursive: true, force: true }));
@@ -40,7 +41,12 @@ test('installer and native host exchange real protocol messages', async t => {
   await assert.rejects(readFile(join(home, '.config/google-chrome/NativeMessagingHosts/com.breadbox.containers.json')), { code: 'ENOENT' });
   const fake = join(home, 'browser');
   await writeFile(fake, '#!/bin/sh\nexit 0\n', { mode: 0o700 });
-  await exec(process.execPath, ['native/install.mjs', '--extension-id', id, '--browser', 'chrome', '--executable', fake, '--home', home]);
+  const files = JSON.parse(await readFile(new URL('../extension/installer-bundle.json', import.meta.url), 'utf8'));
+  for (const [name, content] of Object.entries(files)) assert.equal(content, await readFile(new URL(`../native/${name}`, import.meta.url), 'utf8'), 'Run npm run build after changing companion sources');
+  assert.throws(() => createInstaller(files, '', id), /Choose a browser/);
+  const downloaded = join(home, 'Bread-Box-chrome-Setup.sh');
+  await writeFile(downloaded, createInstaller(files, 'chrome', id));
+  await exec('/bin/sh', [downloaded, '--executable', fake, '--home', home]);
   const registry = process.platform === 'darwin' ? 'Library/Application Support/Google/Chrome' : '.config/google-chrome';
   const manifest = JSON.parse(await readFile(join(home, registry, 'NativeMessagingHosts/com.breadbox.containers.json'), 'utf8'));
   assert.deepEqual(manifest.allowed_origins, [`chrome-extension://${id}/`]);

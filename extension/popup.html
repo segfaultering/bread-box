@@ -22,14 +22,13 @@
         <option value="">Choose your browser…</option>
         <option value="chrome">Google Chrome</option><option value="chromium">Chromium</option><option value="brave">Brave</option><option value="edge">Microsoft Edge</option>
       </select>
-      <div id="setup-command" hidden>
-        <p>In the Bread Box project folder, open a terminal and paste this command. Your extension ID is already included.</p>
-        <code id="command"></code>
-        <button id="copy-command" type="button">Copy setup command</button>
+      <div id="setup-download" hidden>
+        <p>Download and run your installer. It already includes your browser choice and extension ID.</p>
+        <button id="download-installer" type="button">Download installer</button>
         <button id="check-connection" type="button">Check connection</button>
       </div>
       <p class="hint">Requires Node.js 22 or newer on Linux or macOS. The companion keeps account sessions on this computer. No administrator access needed.</p>
-      <details><summary>Need help?</summary><p>Install Node.js if the terminal says “node: command not found”. If your browser is installed in a custom location, add <code>--executable /absolute/path/to/browser</code> to the command. Check that the selected browser is the one showing this extension.</p></details>
+      <details><summary>How do I run the installer?</summary><p>On Linux, open the downloaded file’s Properties, allow it to run as a program, then choose Run in Terminal. File managers vary; some require opening shell scripts from a terminal. On macOS, downloaded scripts may also require execute permission before opening in Terminal. This version requires Node.js 22 or newer, available from nodejs.org.</p><p>After installation, return here and check the connection. You do not need the project folder to run this installer.</p></details>
     </section>
   </main><footer>LOCAL PROFILES · NO CLOUD ACCOUNT</footer><script type="module" src="popup.js"></script>
 </body></html>

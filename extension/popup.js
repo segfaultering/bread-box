@@ -1,3 +1,4 @@
+import { createInstaller } from './installer.js';
 const $ = id => document.getElementById(id);
 const colors = { blue: '#5682cc', purple: '#9864bc', green: '#479271', orange: '#d89549', pink: '#c46f97' };
 const request = message => chrome.runtime.sendMessage(message);
@@ -57,18 +58,26 @@ function showSetup() {
 }
 $('setup-browser').addEventListener('change', () => {
   const browser = $('setup-browser').value;
-  $('setup-command').hidden = !browser;
-  $('command').textContent = browser ? `node native/install.mjs --extension-id ${chrome.runtime.id} --browser ${browser}` : '';
-  $('copy-command').textContent = 'Copy setup command';
+  $('setup-download').hidden = !browser;
 });
-$('copy-command').addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText($('command').textContent); $('copy-command').textContent = 'Copied!'; }
-  catch { error('Select the command above and copy it manually.'); }
+$('download-installer').addEventListener('click', async () => {
+  try {
+    const browser = $('setup-browser').value;
+    const response = await fetch(chrome.runtime.getURL('installer-bundle.json'));
+    if (!response.ok) throw new Error('Installer files are unavailable. Reload the extension and try again.');
+    const script = createInstaller(await response.json(), browser, chrome.runtime.id);
+    const url = URL.createObjectURL(new Blob([script], { type: 'application/x-sh' }));
+    const link = document.createElement('a'); link.href = url;
+    link.download = `Bread-Box-${browser}-Setup.${navigator.platform.includes('Mac') ? 'command' : 'sh'}`;
+    document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    error('Installer downloaded. Run it, then click Check connection. See the instructions below if needed.');
+  } catch (e) { error(e.message); }
 });
 $('check-connection').addEventListener('click', async () => {
   const button = $('check-connection'); button.disabled = true; button.textContent = 'Checking…';
   try { await render(); error('Connected! Create your first container above.'); }
-  catch { error('Not connected yet. Run the setup command for your selected browser, then check again.'); }
+  catch { error('Not connected yet. Run the downloaded installer for your selected browser, then check again.'); }
   finally { button.disabled = false; button.textContent = 'Check connection'; }
 });
 render().catch(showSetup);

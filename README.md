@@ -7,10 +7,12 @@ A Manifest V3 Chromium extension with persistent account containers backed by in
 Requires Node.js 22+ and a locally installed Chrome, Chromium, Brave or Edge on Linux or macOS. Windows and sandbox-packaged browsers (Snap/Flatpak) are not supported yet.
 
 1. Open `chrome://extensions` (or your browser's extensions page), enable **Developer mode**, choose **Load unpacked**, and select this project's `extension` folder.
-2. Open Bread Box from the browser's Extensions menu. Under **One quick setup**, explicitly choose the browser where you loaded it. Click **Copy setup command** and paste it into a terminal opened in this project folder. Your extension ID and browser choice are filled in; you do not need to find or type either one. The installer enables only the browser you selected. It never chooses a browser automatically.
+2. Open Bread Box from the browser's Extensions menu. Under **One quick setup**, explicitly choose the browser where you loaded it and click **Download installer**. Run the downloaded file. Your extension ID and browser choice are included, and the installer contains all companion files; it does not need the project folder. The installer enables only the browser you selected. It never chooses a browser automatically.
 3. Click **Check connection** in the popup (reopen it if it closed). Once connected, create a container and click its name to open it. Log in normally; subsequent opens retain that account. Check **Open the current page** to send a page to a container, or right-click a link and select **Open link in container**.
 
 To enable another browser, load the extension in that browser and repeat its setup. No administrator access or npm dependency installation is needed.
+
+Downloaded scripts may need permission to execute. On Linux, use the file's Properties to allow running it as a program, then choose Run in Terminal where supported. On macOS, the `.command` file may also need execute permission before opening in Terminal. Some systems require running shell scripts from a terminal. This is a portable script installer, not a signed desktop installer; Node.js 22+ must already be installed.
 
 For advanced or scripted installation:
 
@@ -20,7 +22,7 @@ node native/install.mjs --extension-id YOUR_EXTENSION_ID --browser chrome
 
 Browser choices: `chrome`, `chromium`, `brave`, `edge`. The `--browser` option is required. For a nonstandard installation add `--executable /absolute/path/to/browser`. The installer locates the executable only for the browser you explicitly selected.
 
-The installer copies the companion into `~/.bread-box/host/` and registers it with your selected browser for this extension ID. It uses the absolute path of the Node executable running the installer; rerun installation if you move or remove that Node version. Reload the extension after code changes, and rerun installation after companion changes. No npm dependency installation is required.
+The installer copies the companion into `~/.bread-box/host/` and registers it with your selected browser for this extension ID. It uses the absolute path of the Node executable running the installer; rerun installation if you move or remove that Node version. Reload the extension after code changes. After changing companion sources, run `npm run build` to refresh the packaged installer, reload the extension and download/run a new installer. No npm dependency installation is required.
 
 ## Current behavior and limits
 
