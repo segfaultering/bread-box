@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bread Box</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <header><span class="mark">▦</span><div><h1>Bread Box</h1><p>A space for every account.</p></div><span id="connection">Connecting</span></header>
+  <main>
+    <p class="eyebrow">YOUR CONTAINERS</p>
+    <div id="containers"></div>
+    <p id="empty" hidden>Create your first container below.</p>
+    <label class="toggle"><input type="checkbox" id="current"> Open the current page in the container</label>
+    <p class="hint">The original tab stays open. Each container uses a separate browser window and keeps its logins.</p>
+    <details><summary>Create a container</summary><form id="create">
+      <label>Name<input id="name" maxlength="40" placeholder="Work, Personal, Client…" required></label>
+      <label>Color<select id="color"><option value="blue">Blue</option><option value="purple">Purple</option><option value="green">Green</option><option value="orange">Orange</option><option value="pink">Pink</option></select></label>
+      <button type="submit">Create container</button>
+    </form></details>
+    <p id="status" role="status" aria-live="polite"></p>
+    <details id="setup" hidden><summary>Connect the local companion</summary><p>Load this extension, then run the command below from the Bread Box project folder with Node.js 22 or newer.</p><code id="command"></code><p>Supports Linux and macOS. Choose the browser you installed the extension in: chrome, chromium, brave, or edge. Reopen this popup after installation.</p></details>
+  </main><footer>LOCAL PROFILES · NO CLOUD ACCOUNT</footer><script type="module" src="popup.js"></script>
+</body></html>

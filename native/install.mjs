@@ -1,0 +1,41 @@
+import { mkdir, writeFile, copyFile, access } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { homedir } from 'node:os';
+import { resolve, join, dirname, isAbsolute } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const args = process.argv.slice(2);
+const options = {};
+for (let i = 0; i < args.length; i += 2) {
+  if (!['--extension-id', '--browser', '--executable', '--home'].includes(args[i]) || !args[i + 1]) throw new Error('Usage: npm run install:host -- --extension-id ID --browser chrome|chromium|brave|edge [--executable /path/to/browser] [--home /test/home]');
+  options[args[i]] = args[i + 1];
+}
+const id = options['--extension-id'];
+if (!/^[a-p]{32}$/.test(id || '')) throw new Error('Provide the extension ID shown on your browser extensions page.');
+if (!['linux', 'darwin'].includes(process.platform)) throw new Error('The companion installer currently supports Linux and macOS.');
+const browser = options['--browser'] || 'chrome';
+const linux = { chrome: ['google-chrome', 'google-chrome-stable'], chromium: ['chromium', 'chromium-browser'], brave: ['brave-browser', 'brave'], edge: ['microsoft-edge', 'microsoft-edge-stable'] };
+const mac = { chrome: 'Google Chrome.app/Contents/MacOS/Google Chrome', chromium: 'Chromium.app/Contents/MacOS/Chromium', brave: 'Brave Browser.app/Contents/MacOS/Brave Browser', edge: 'Microsoft Edge.app/Contents/MacOS/Microsoft Edge' };
+if (!linux[browser]) throw new Error('Unsupported browser. Choose chrome, chromium, brave, or edge.');
+let executable = options['--executable'];
+if (executable && !isAbsolute(executable)) throw new Error('--executable must be an absolute path.');
+const candidates = executable ? [executable] : process.platform === 'darwin' ? [join('/Applications', mac[browser]), join(homedir(), 'Applications', mac[browser])] : (process.env.PATH || '').split(':').flatMap(dir => linux[browser].map(name => resolve(dir, name)));
+executable = undefined;
+for (const candidate of candidates) { try { await access(candidate, constants.X_OK); executable = candidate; break; } catch {} }
+if (!executable) throw new Error('Browser not found. Specify --executable /absolute/path/to/browser.');
+const home = resolve(options['--home'] || homedir());
+const root = join(home, '.bread-box');
+const hostRoot = join(root, 'host', browser, id);
+await mkdir(hostRoot, { recursive: true, mode: 0o700 });
+const source = dirname(fileURLToPath(import.meta.url));
+for (const name of ['host.mjs', 'core.mjs']) await copyFile(join(source, name), join(hostRoot, name));
+const origins = [`chrome-extension://${id}/`];
+await writeFile(join(hostRoot, 'config.json'), JSON.stringify({ executable, origins, dataRoot: join(root, 'data', browser) }), { mode: 0o600 });
+const quote = value => `'${value.replaceAll("'", "'\\''")}'`;
+const launcher = join(hostRoot, 'launch.sh');
+await writeFile(launcher, `#!/bin/sh\nexec ${quote(process.execPath)} ${quote(join(hostRoot, 'host.mjs'))} "$@"\n`, { mode: 0o700 });
+const linuxDirs = { chrome: '.config/google-chrome', chromium: '.config/chromium', brave: '.config/BraveSoftware/Brave-Browser', edge: '.config/microsoft-edge' };
+const macDirs = { chrome: 'Google/Chrome', chromium: 'Chromium', brave: 'BraveSoftware/Brave-Browser', edge: 'Microsoft Edge' };
+const registry = process.platform === 'linux' ? join(home, linuxDirs[browser], 'NativeMessagingHosts') : join(home, 'Library/Application Support', macDirs[browser], 'NativeMessagingHosts');
+await mkdir(registry, { recursive: true });
+await writeFile(join(registry, 'com.breadbox.containers.json'), JSON.stringify({ name: 'com.breadbox.containers', description: 'Bread Box local account containers', path: launcher, type: 'stdio', allowed_origins: origins }, null, 2), { mode: 0o600 });
+console.log(`Installed Bread Box companion for ${browser}. Reopen the extension popup.\nContainer data: ${join(root, 'data', browser)}`);
